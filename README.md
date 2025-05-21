@@ -4,6 +4,8 @@ PathDigest is a command-line tool written in Go that analyzes Git repositories, 
 
 Inspired by web-based tools like [gitingest](https://github.com/cyclotruc/gitingest) by @cyclotruc, PathDigest brings similar powerful code-to-context capabilities directly to your terminal as a native, efficient binary.
 
+> I made this tool for my own use, but I thought it might be useful for others.
+
 ## Features
 
 *   **Versatile Source Input**: Process Git repository URLs (cloning specific branches/commits if needed), local directories, or single files.
