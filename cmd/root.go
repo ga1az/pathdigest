@@ -10,6 +10,18 @@ import (
 )
 
 var (
+	appVersion string
+	goVersion  string
+)
+
+func SetVersionInfo(appV, goV string) {
+	appVersion = appV
+	if goV != "" { // Solo asignar si se pasa algo significativo
+		goVersion = goV
+	}
+}
+
+var (
 	outputFile      string
 	maxFileSize     int64
 	excludePatterns []string
@@ -25,7 +37,8 @@ and creates a structured text output of its codebase.
 
 This output is optimized for use as context for Large Language Models (LLMs).
 You can specify a local path or a repository URL as the source.`,
-	Args: cobra.ExactArgs(1),
+	Args:    cobra.ExactArgs(1),
+	Version: appVersion,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		userExcludePatterns, err := cmd.Flags().GetStringSlice("exclude-pattern")
 		if err != nil {
@@ -100,6 +113,19 @@ You can specify a local path or a repository URL as the source.`,
 	},
 }
 
+var versionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "Print the version number of pathdigest",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Printf("pathdigest version: %s\n", appVersion)
+		if goVersion != "" && goVersion != "unknown" && goVersion != "built with Go" {
+			fmt.Printf("Built with Go version: %s\n", goVersion)
+		} else if goVersion == "built with Go" {
+			fmt.Printf("%s\n", goVersion)
+		}
+	},
+}
+
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
@@ -108,6 +134,8 @@ func Execute() {
 }
 
 func init() {
+	rootCmd.AddCommand(versionCmd)
+
 	rootCmd.Flags().StringVarP(&outputFile, "output", "o", "pathdigest_digest.txt", "Output file path")
 	rootCmd.Flags().Int64VarP(&maxFileSize, "max-size", "s", 10*1024*1024, "Maximum file size to process in bytes (e.g., 10485760 for 10MB)") // 10MB default
 

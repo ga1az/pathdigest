@@ -6,6 +6,16 @@ Inspired by web-based tools like [gitingest](https://github.com/cyclotruc/giting
 
 > I made this tool for my own use, but I thought it might be useful for others.
 
+## Installation
+
+### Via `go install` (Recommended if you have Go installed)
+
+Make sure you have Go (1.20 or higher recommended) installed and `$HOME/go/bin` (or `$GOPATH/bin`) is in your `PATH`.
+
+```bash
+go install github.com/ga1az/pathdigest@latest
+```
+
 ## Features
 
 *   **Versatile Source Input**: Process Git repository URLs (cloning specific branches/commits if needed), local directories, or single files.
