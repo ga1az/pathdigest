@@ -16,6 +16,17 @@ Make sure you have Go (1.20 or higher recommended) installed and `$HOME/go/bin` 
 go install github.com/ga1az/pathdigest@latest
 ```
 
+### Via `install.sh` (Recommended if you don't have Go installed)
+
+```bash
+curl -sSfL https://raw.githubusercontent.com/ga1az/pathdigest/main/install.sh | sh -s
+
+# Install to a specific directory
+curl -sSfL https://raw.githubusercontent.com/ga1az/pathdigest/main/install.sh | sh -s -- -b /usr/local/bin
+```
+
+
+
 ## Features
 
 *   **Versatile Source Input**: Process Git repository URLs (cloning specific branches/commits if needed), local directories, or single files.
