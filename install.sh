@@ -98,6 +98,21 @@ get_binaries_info() {
   esac
 }
 
+tag_to_version() {
+  if [ -z "${TAG}" ]; then
+    log_info "checking GitHub for latest tag"
+  else
+    log_info "checking GitHub for tag '${TAG}'"
+  fi
+  REALTAG=$(github_release "$GITHUB_REPO_SLUG" "${TAG}") && true # GITHUB_REPO_SLUG debe estar definido
+  if test -z "$REALTAG"; then
+    log_crit "unable to find '${TAG}' - use 'latest' or see https://github.com/${GITHUB_REPO_SLUG}/releases for details"
+    exit 1
+  fi
+  TAG="$REALTAG"
+  VERSION=${TAG#v}
+}
+
 cat /dev/null <<EOF
 ------------------------------------------------------------------------
 https://github.com/client9/shlib - portable posix shell functions
@@ -331,7 +346,6 @@ EOF
 PROJECT_NAME="pathdigest"
 OWNER="ga1az"
 REPO="pathdigest"
-
 GITHUB_REPO_SLUG="${OWNER}/${REPO}"
 
 log_prefix() {
