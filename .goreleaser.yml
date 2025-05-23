@@ -22,18 +22,10 @@ builds:
       # - -X main.goVersion={{.GoVersion}}
 
 archives:
-  - format: tar.gz
-    name_template: >-
-      {{ .ProjectName }}_
-      {{- if eq .Os "darwin" }}macOS
-      {{- else }}{{ .Os }}{{ end }}_
-      {{- .Arch }}
-      {{- if .Arm }}v{{ .Arm }}{{ end }}
-    files:
-      - README.md
-  - id: pathdigest-binary
+  - id: tar.gz
+    format: tar.gz
+  - id: binary
     format: binary
-    name_template: "{{ .Binary }}_{{ .Os }}_{{ .Arch }}"
 
 checksum:
   name_template: "checksums.txt"
