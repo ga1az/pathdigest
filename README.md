@@ -21,6 +21,9 @@ go install github.com/ga1az/pathdigest@latest
 ```bash
 curl -sSfL https://raw.githubusercontent.com/ga1az/pathdigest/main/install.sh | sh -s
 
+# For MAC M1/M2/M3/MX
+curl -sSfL https://raw.githubusercontent.com/ga1az/pathdigest/main/install.sh | sh -s -- -b ~/.local/bin
+
 # Install to a specific directory
 curl -sSfL https://raw.githubusercontent.com/ga1az/pathdigest/main/install.sh | sh -s -- -b /usr/local/bin
 ```
