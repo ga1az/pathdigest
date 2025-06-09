@@ -25,7 +25,17 @@ curl -sSfL https://raw.githubusercontent.com/ga1az/pathdigest/main/install.sh | 
 curl -sSfL https://raw.githubusercontent.com/ga1az/pathdigest/main/install.sh | sh -s -- -b /usr/local/bin
 ```
 
+## Usage
 
+```bash
+pathdigest <source>
+
+//Git URL
+pathdigest https://github.com/ga1az/pathdigest
+
+//Local Directory
+pathdigest ./projects/pathdigest -o pathdigest_digest.txt
+```
 
 ## Features
 
