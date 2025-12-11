@@ -225,17 +225,29 @@ func processDirectory(currentDirNode *FileNode, basePath string, opts IngestionO
 		}
 
 		var finalDecisionToProcess bool
-		if matchesExclude {
-			if len(opts.IncludePatterns) > 0 && matchesInclude {
-				finalDecisionToProcess = true
+
+		if entry.IsDir() {
+			if matchesExclude && !matchesInclude {
+				continue
+			}
+			if len(opts.IncludePatterns) > 0 {
+				finalDecisionToProcess = matchesInclude || shouldProcessDirForInclude(relPath, opts.IncludePatterns)
 			} else {
-				finalDecisionToProcess = false
+				finalDecisionToProcess = true
 			}
 		} else {
-			if len(opts.IncludePatterns) > 0 {
-				finalDecisionToProcess = matchesInclude
+			if matchesExclude {
+				if len(opts.IncludePatterns) > 0 && matchesInclude {
+					finalDecisionToProcess = true
+				} else {
+					finalDecisionToProcess = false
+				}
 			} else {
-				finalDecisionToProcess = true
+				if len(opts.IncludePatterns) > 0 {
+					finalDecisionToProcess = matchesInclude
+				} else {
+					finalDecisionToProcess = true
+				}
 			}
 		}
 
@@ -295,9 +307,7 @@ func processDirectory(currentDirNode *FileNode, basePath string, opts IngestionO
 
 func isPathMatchWithInfo(relativePath string, isDir bool, patterns []string) bool {
 	normalizedPath := filepath.ToSlash(relativePath)
-	if strings.HasPrefix(normalizedPath, "./") {
-		normalizedPath = strings.TrimPrefix(normalizedPath, "./")
-	}
+	normalizedPath = strings.TrimPrefix(normalizedPath, "./")
 	if normalizedPath == "" && relativePath == "./" {
 		normalizedPath = "."
 	}
@@ -305,10 +315,8 @@ func isPathMatchWithInfo(relativePath string, isDir bool, patterns []string) boo
 	for _, pattern := range patterns {
 		isDirPattern := strings.HasSuffix(pattern, "/")
 		cleanPattern := strings.TrimSuffix(pattern, "/")
+		cleanPattern = strings.TrimPrefix(cleanPattern, "./")
 
-		if strings.HasPrefix(cleanPattern, "./") {
-			cleanPattern = strings.TrimPrefix(cleanPattern, "./")
-		}
 		if cleanPattern == "" && pattern == "./" {
 			cleanPattern = "."
 		}
@@ -334,7 +342,12 @@ func isPathMatchWithInfo(relativePath string, isDir bool, patterns []string) boo
 				}
 				pathToCheckPrefix = parentDir + "/"
 			}
+
 			if strings.HasPrefix(pathToCheckPrefix, cleanPattern+"/") {
+				return true
+			}
+
+			if isDir && strings.HasPrefix(cleanPattern+"/", pathToCheckPrefix) {
 				return true
 			}
 		} else {
@@ -345,6 +358,30 @@ func isPathMatchWithInfo(relativePath string, isDir bool, patterns []string) boo
 			if matched, _ := filepath.Match(cleanPattern, normalizedPath); matched {
 				return true
 			}
+		}
+	}
+	return false
+}
+
+func shouldProcessDirForInclude(relativePath string, patterns []string) bool {
+	normalizedPath := filepath.ToSlash(relativePath)
+	normalizedPath = strings.TrimPrefix(normalizedPath, "./")
+
+	for _, pattern := range patterns {
+		isDirPattern := strings.HasSuffix(pattern, "/")
+		cleanPattern := strings.TrimSuffix(pattern, "/")
+		cleanPattern = strings.TrimPrefix(cleanPattern, "./")
+
+		if isDirPattern {
+			pathWithSlash := normalizedPath + "/"
+			if strings.HasPrefix(pathWithSlash, cleanPattern+"/") {
+				return true
+			}
+			if strings.HasPrefix(cleanPattern+"/", pathWithSlash) {
+				return true
+			}
+		} else {
+			return true
 		}
 	}
 	return false
