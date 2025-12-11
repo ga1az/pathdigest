@@ -2,7 +2,6 @@ name: Release pathdigest
 
 on:
   push:
-    branches: [main]
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
 
@@ -26,29 +25,6 @@ jobs:
       - name: Run tests before release
         run: go test ./... -v
 
-      - name: Get version info
-        id: version
-        run: |
-          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-            echo "is_tag=true" >> $GITHUB_OUTPUT
-          else
-            # Auto-generate version based on date and short SHA
-            VERSION="v0.0.0-$(date +%Y%m%d)-${GITHUB_SHA::7}"
-            echo "version=$VERSION" >> $GITHUB_OUTPUT
-            echo "is_tag=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Create tag for main branch push
-        if: steps.version.outputs.is_tag == 'false'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag ${{ steps.version.outputs.version }}
-          git push origin ${{ steps.version.outputs.version }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
@@ -56,3 +32,4 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
