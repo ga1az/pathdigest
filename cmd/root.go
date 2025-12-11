@@ -16,7 +16,7 @@ var (
 
 func SetVersionInfo(appV, goV string) {
 	appVersion = appV
-	if goV != "" { // Solo asignar si se pasa algo significativo
+	if goV != "" {
 		goVersion = goV
 	}
 }
