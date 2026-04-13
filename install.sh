@@ -17,8 +17,9 @@ EOF
 }
 
 parse_args() {
-  if [ -n "$GOPATH" ] && [ -d "$GOPATH/bin" ]; then
-    DEFAULT_BINDIR="$GOPATH/bin"
+  gopath=$(go env GOPATH 2>/dev/null || true)
+  if [ -n "$gopath" ] && [ -d "$gopath/bin" ]; then
+    DEFAULT_BINDIR="$gopath/bin"
   elif [ -n "$HOME" ]; then
     DEFAULT_BINDIR="$HOME/.local/bin"
   else
