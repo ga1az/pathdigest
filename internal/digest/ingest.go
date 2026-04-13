@@ -343,8 +343,19 @@ func isPathMatchWithInfo(relativePath string, isDir bool, patterns []string) boo
 				pathToCheckPrefix = parentDir + "/"
 			}
 
+			// Check if path starts with the pattern (e.g. ".git/HEAD" matches ".git/")
 			if strings.HasPrefix(pathToCheckPrefix, cleanPattern+"/") {
 				return true
+			}
+
+			// Check if the pattern matches any segment of the path.
+			// This handles nested directories like "vendor/.git/" matching ".git/".
+			if !strings.Contains(cleanPattern, "/") {
+				// Simple dir name pattern (e.g. ".git/", "node_modules/")
+				// Check if any path segment matches
+				if strings.Contains("/"+pathToCheckPrefix, "/"+cleanPattern+"/") {
+					return true
+				}
 			}
 
 			if isDir && strings.HasPrefix(cleanPattern+"/", pathToCheckPrefix) {
