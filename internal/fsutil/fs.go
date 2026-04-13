@@ -55,7 +55,13 @@ func GetRelativePath(basePath, targetPath string) (string, error) {
 		return "", err
 	}
 
-	if !strings.HasPrefix(absTargetPath, absBasePath) {
+	// Ensure we check at a path segment boundary to avoid
+	// false matches like "/tmp" matching "/tmp2"
+	baseWithSep := absBasePath
+	if !strings.HasSuffix(baseWithSep, string(filepath.Separator)) {
+		baseWithSep += string(filepath.Separator)
+	}
+	if absTargetPath != absBasePath && !strings.HasPrefix(absTargetPath, baseWithSep) {
 		return filepath.Base(absTargetPath), nil
 	}
 

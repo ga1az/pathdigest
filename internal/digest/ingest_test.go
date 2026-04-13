@@ -43,6 +43,14 @@ func TestIsPathMatchWithInfo(t *testing.T) {
 		{"Pattern of dir vs file with same name", "data", false, []string{"data/"}, false},
 		{"Pattern of file vs dir with same name", "data/", true, []string{"data"}, true},
 
+		// Nested directory exclusion patterns
+		{"Nested .git dir", "vendor/lib/.git", true, []string{".git/"}, true},
+		{"Nested .git file", "vendor/lib/.git/HEAD", false, []string{".git/"}, true},
+		{"Nested .git deep", "a/b/c/.git/objects/pack", false, []string{".git/"}, true},
+		{"Nested node_modules", "packages/app/node_modules", true, []string{"node_modules/"}, true},
+		{"Nested node_modules file", "packages/app/node_modules/pkg/index.js", false, []string{"node_modules/"}, true},
+		{"Nested .next dir", "apps/web/.next", true, []string{".next/"}, true},
+		{"Nested build dir", "packages/lib/build", true, []string{"build/"}, true},
 		{"No patterns", "file.txt", false, []string{}, false},
 		{"Empty path, no patterns", "", false, []string{}, false},
 		{"Empty path, with pattern", "", false, []string{"*.txt"}, false},
