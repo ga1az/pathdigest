@@ -17,8 +17,10 @@ EOF
 }
 
 parse_args() {
-  if go env GOPATH >/dev/null 2>&1; then
-    DEFAULT_BINDIR=$(go env GOPATH)/bin
+  if [ -n "$GOPATH" ] && [ -d "$GOPATH/bin" ]; then
+    DEFAULT_BINDIR="$GOPATH/bin"
+  elif [ -n "$HOME" ]; then
+    DEFAULT_BINDIR="$HOME/.local/bin"
   else
     DEFAULT_BINDIR=./bin
   fi
@@ -34,6 +36,42 @@ parse_args() {
   done
   shift $((OPTIND - 1))
   TAG=$1
+}
+
+add_to_path() {
+  # Check if BINDIR is already in PATH
+  case ":$PATH:" in
+    *":$BINDIR:"*)
+      log_info "Directory ${BINDIR} is already in PATH"
+      return
+      ;;
+  esac
+
+  # Detect the user's shell config file
+  profile=""
+  case "${SHELL:-}" in
+    */zsh)  profile="$HOME/.zshrc" ;;
+    */bash) profile="$HOME/.bashrc" ;;
+    */fish) return ;; # fish handles PATH differently
+    *)      profile="$HOME/.profile" ;;
+  esac
+
+  # Check if it's already configured (idempotent)
+  path_line="export PATH=\"${BINDIR}:\$PATH\""
+  if [ -f "$profile" ] && grep -F "$path_line" "$profile" >/dev/null 2>&1; then
+    log_info "PATH already configured in ${profile}"
+    log_info "Run: source ${profile}  (or open a new terminal)"
+    return
+  fi
+
+  # Append to shell config
+  {
+    printf '\n# Added by pathdigest installer\n'
+    printf '%s\n' "$path_line"
+  } >>"$profile"
+
+  log_info "Added ${BINDIR} to PATH in ${profile}"
+  log_info "Run: source ${profile}  (or open a new terminal)"
 }
 
 execute() {
@@ -67,6 +105,8 @@ execute() {
   log_info "Installed ${TARGET_BIN_PATH}"
   
   rm -rf "${tmpdir}"
+
+  add_to_path
 }
 
 get_binaries_info() {
