@@ -13,10 +13,18 @@ func TestGetRelativePath(t *testing.T) {
 	nestedDir := filepath.Join(baseDir, "src", "lib")
 	similarDir := filepath.Join(tmpDir, "project2", "file.txt")
 
-	os.MkdirAll(nestedDir, 0755)
-	os.MkdirAll(filepath.Dir(similarDir), 0755)
-	os.WriteFile(filepath.Join(nestedDir, "main.go"), []byte("package main"), 0644)
-	os.WriteFile(similarDir, []byte("hello"), 0644)
+	if err := os.MkdirAll(nestedDir, 0755); err != nil {
+		t.Fatalf("failed to create nested test directory %q: %v", nestedDir, err)
+	}
+	if err := os.MkdirAll(filepath.Dir(similarDir), 0755); err != nil {
+		t.Fatalf("failed to create similar test directory %q: %v", filepath.Dir(similarDir), err)
+	}
+	if err := os.WriteFile(filepath.Join(nestedDir, "main.go"), []byte("package main"), 0644); err != nil {
+		t.Fatalf("failed to create nested test file %q: %v", filepath.Join(nestedDir, "main.go"), err)
+	}
+	if err := os.WriteFile(similarDir, []byte("hello"), 0644); err != nil {
+		t.Fatalf("failed to create similar test file %q: %v", similarDir, err)
+	}
 
 	tests := []struct {
 		name     string
