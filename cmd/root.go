@@ -27,6 +27,7 @@ var (
 	excludePatterns []string
 	includePatterns []string
 	branch          string
+	outputFormat    string
 )
 
 var rootCmd = &cobra.Command{
@@ -84,7 +85,19 @@ You can specify a local path or a repository URL as the source.`,
 			os.Exit(1)
 		}
 
-		ingestResult.FormatOutput(opts)
+		var outputContent string
+
+		if outputFormat == "json" {
+			jsonBytes, errJSON := ingestResult.FormatJSON(opts)
+			if errJSON != nil {
+				fmt.Fprintf(os.Stderr, "Error formatting JSON output: %v\n", errJSON)
+				os.Exit(1)
+			}
+			outputContent = string(jsonBytes)
+		} else {
+			ingestResult.FormatOutput(opts)
+			outputContent = ingestResult.TreeStructure + "\n" + ingestResult.FileContents
+		}
 
 		if opts.OutputFile != "" && opts.OutputFile != "-" {
 			outputDir := filepath.Dir(opts.OutputFile)
@@ -95,20 +108,21 @@ You can specify a local path or a repository URL as the source.`,
 				}
 			}
 
-			fileContentToWrite := ingestResult.TreeStructure + "\n" + ingestResult.FileContents
-			err = os.WriteFile(opts.OutputFile, []byte(fileContentToWrite), 0644)
+			err = os.WriteFile(opts.OutputFile, []byte(outputContent), 0644)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Error writing to output file %s: %v\n", opts.OutputFile, err)
 				os.Exit(1)
 			}
 			fmt.Fprintf(os.Stderr, "Digest written to: %s\n", opts.OutputFile)
 		} else {
-			fmt.Println(ingestResult.TreeStructure)
-			fmt.Println(ingestResult.FileContents)
+			fmt.Println(outputContent)
 		}
 
-		fmt.Fprintln(os.Stderr, "\n--- Summary ---")
-		fmt.Fprint(os.Stderr, ingestResult.Summary)
+		if outputFormat != "json" {
+			ingestResult.FormatOutput(opts)
+			fmt.Fprintln(os.Stderr, "\n--- Summary ---")
+			fmt.Fprint(os.Stderr, ingestResult.Summary)
+		}
 
 	},
 }
@@ -142,4 +156,5 @@ func init() {
 	rootCmd.Flags().StringSliceP("exclude-pattern", "e", []string{}, "Comma-separated glob patterns to exclude (adds to defaults)")
 	rootCmd.Flags().StringSliceVarP(&includePatterns, "include-pattern", "i", []string{}, "Comma-separated glob patterns to include (overrides excludes)")
 	rootCmd.Flags().StringVarP(&branch, "branch", "b", "", "Branch to clone and ingest (if source is a Git URL)")
+	rootCmd.Flags().StringVarP(&outputFormat, "format", "f", "text", "Output format: text or json")
 }
