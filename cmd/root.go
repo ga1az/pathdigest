@@ -41,9 +41,18 @@ You can specify a local path or a repository URL as the source.`,
 	Args:    cobra.ExactArgs(1),
 	Version: appVersion,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		// Only parse exclude patterns when running the root command
+		if !cmd.Flags().Changed("exclude-pattern") && !cmd.HasFlags() {
+			return nil
+		}
+		if !cmd.Flags().HasAvailableFlags() {
+			return nil
+		}
+
 		userExcludePatterns, err := cmd.Flags().GetStringSlice("exclude-pattern")
 		if err != nil {
-			return fmt.Errorf("error parsing exclude patterns: %w", err)
+			// Flag doesn't exist for this subcommand (e.g. completion, version) — skip
+			return nil
 		}
 
 		finalExcludesSet := make(map[string]struct{})
