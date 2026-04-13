@@ -6,10 +6,10 @@ import (
 )
 
 type JSONOutput struct {
-	Summary   JSONSummary    `json:"summary"`
-	Tree      []*JSONNode    `json:"tree"`
-	Files     []JSONFile     `json:"files"`
-	GitInfo   *JSONGitInfo   `json:"git_info,omitempty"`
+	Summary JSONSummary  `json:"summary"`
+	Tree    []*JSONNode  `json:"tree"`
+	Files   []JSONFile   `json:"files"`
+	GitInfo *JSONGitInfo `json:"git_info,omitempty"`
 }
 
 type JSONSummary struct {
@@ -17,9 +17,9 @@ type JSONSummary struct {
 	TotalFiles      int      `json:"total_files"`
 	TotalSize       int64    `json:"total_size"`
 	TotalSizeHuman  string   `json:"total_size_human"`
-	ExcludePatterns []string `json:"exclude_patterns,omitempty"`
-	IncludePatterns []string `json:"include_patterns,omitempty"`
-	MaxFileSize     int64    `json:"max_file_size,omitempty"`
+	ExcludePatterns []string `json:"exclude_patterns"`
+	IncludePatterns []string `json:"include_patterns"`
+	MaxFileSize     int64    `json:"max_file_size"`
 }
 
 type JSONNode struct {
@@ -34,7 +34,7 @@ type JSONFile struct {
 	Path    string `json:"path"`
 	Size    int64  `json:"size"`
 	Type    string `json:"type"`
-	Content string `json:"content,omitempty"`
+	Content string `json:"content"`
 }
 
 type JSONGitInfo struct {
@@ -116,12 +116,10 @@ func gatherJSONFiles(node *FileNode) []JSONFile {
 func gatherJSONFilesRecursive(node *FileNode, files *[]JSONFile) {
 	if node.Type == NodeTypeFile {
 		f := JSONFile{
-			Path: filepath.ToSlash(node.Path),
-			Size: node.Size,
-			Type: string(node.Type),
-		}
-		if node.Content != "" {
-			f.Content = node.Content
+			Path:    filepath.ToSlash(node.Path),
+			Size:    node.Size,
+			Type:    string(node.Type),
+			Content: node.Content, // always include, even if empty
 		}
 		*files = append(*files, f)
 	} else if node.Type == NodeTypeNotText || node.Type == NodeTypeTooLarge {

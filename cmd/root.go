@@ -63,6 +63,12 @@ You can specify a local path or a repository URL as the source.`,
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
+		// Validate format flag early
+		if outputFormat != "text" && outputFormat != "json" {
+			fmt.Fprintf(os.Stderr, "Error: unsupported format '%s'. Use 'text' or 'json'.\n", outputFormat)
+			os.Exit(1)
+		}
+
 		source := args[0]
 
 		opts := digest.IngestionOptions{
@@ -85,41 +91,38 @@ You can specify a local path or a repository URL as the source.`,
 			os.Exit(1)
 		}
 
-		var outputContent string
-
+		// Route to the correct formatter — exactly one call
 		if outputFormat == "json" {
 			jsonBytes, errJSON := ingestResult.FormatJSON(opts)
 			if errJSON != nil {
 				fmt.Fprintf(os.Stderr, "Error formatting JSON output: %v\n", errJSON)
 				os.Exit(1)
 			}
-			outputContent = string(jsonBytes)
-		} else {
-			ingestResult.FormatOutput(opts)
-			outputContent = ingestResult.TreeStructure + "\n" + ingestResult.FileContents
-		}
 
-		if opts.OutputFile != "" && opts.OutputFile != "-" {
-			outputDir := filepath.Dir(opts.OutputFile)
-			if outputDir != "." && outputDir != "" {
-				if err := os.MkdirAll(outputDir, 0755); err != nil {
-					fmt.Fprintf(os.Stderr, "Error creating output directory %s: %v\n", outputDir, err)
+			if opts.OutputFile != "" && opts.OutputFile != "-" {
+				if err := writeOutputFile(opts.OutputFile, jsonBytes); err != nil {
+					fmt.Fprintf(os.Stderr, "Error writing to output file %s: %v\n", opts.OutputFile, err)
 					os.Exit(1)
 				}
+				fmt.Fprintf(os.Stderr, "Digest written to: %s\n", opts.OutputFile)
+			} else {
+				os.Stdout.Write(jsonBytes)
 			}
-
-			err = os.WriteFile(opts.OutputFile, []byte(outputContent), 0644)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error writing to output file %s: %v\n", opts.OutputFile, err)
-				os.Exit(1)
-			}
-			fmt.Fprintf(os.Stderr, "Digest written to: %s\n", opts.OutputFile)
 		} else {
-			fmt.Println(outputContent)
-		}
-
-		if outputFormat != "json" {
 			ingestResult.FormatOutput(opts)
+
+			if opts.OutputFile != "" && opts.OutputFile != "-" {
+				textBytes := []byte(ingestResult.TreeStructure + "\n" + ingestResult.FileContents)
+				if err := writeOutputFile(opts.OutputFile, textBytes); err != nil {
+					fmt.Fprintf(os.Stderr, "Error writing to output file %s: %v\n", opts.OutputFile, err)
+					os.Exit(1)
+				}
+				fmt.Fprintf(os.Stderr, "Digest written to: %s\n", opts.OutputFile)
+			} else {
+				fmt.Println(ingestResult.TreeStructure)
+				fmt.Println(ingestResult.FileContents)
+			}
+
 			fmt.Fprintln(os.Stderr, "\n--- Summary ---")
 			fmt.Fprint(os.Stderr, ingestResult.Summary)
 		}
@@ -138,6 +141,16 @@ var versionCmd = &cobra.Command{
 			fmt.Printf("%s\n", goVersion)
 		}
 	},
+}
+
+func writeOutputFile(path string, data []byte) error {
+	outputDir := filepath.Dir(path)
+	if outputDir != "." && outputDir != "" {
+		if err := os.MkdirAll(outputDir, 0755); err != nil {
+			return err
+		}
+	}
+	return os.WriteFile(path, data, 0644)
 }
 
 func Execute() {
